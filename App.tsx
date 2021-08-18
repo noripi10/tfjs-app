@@ -1,6 +1,6 @@
 import { Camera } from 'expo-camera';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import * as tf from '@tensorflow/tfjs';
 import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
