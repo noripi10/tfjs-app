@@ -30,6 +30,7 @@ module.exports = {
     'react/display-name': 'off',
     'react/prop-types': 'off',
     'prettier/prettier': 'error',
+    '@typescript-eslint/no-var-requires': 0,
   },
   settings: {
     react: {
