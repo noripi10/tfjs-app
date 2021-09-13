@@ -21,6 +21,7 @@ module.exports = {
   },
   plugins: ['react', 'react-hooks', '@typescript-eslint', 'prettier'],
   rules: {
+    '@typescript-eslint/no-unsafe-assignment': ['error', { inferCatchAsUnknown: true }],
     indent: ['error', 2, { SwitchCase: 1 }],
     'linebreak-style': ['error', 'unix'],
     quotes: ['error', 'single', { avoidEscape: true }],

@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Alert, Platform, Image } from 'react-native';
 import { Camera, PermissionResponse } from 'expo-camera';
 // import Constants from 'expo-constants';
 import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import { fetch, decodeJpeg } from '@tensorflow/tfjs-react-native';
-import '@tensorflow/tfjs-backend-webgl';
-import { useMemo } from 'react';
+// import '@tensorflow/tfjs-backend-webgl';
 
 type TextureProps = { height: number; width: number };
 
@@ -20,7 +19,8 @@ type Result = {
         probability: number;
       }[]
     | null;
-  handlePrediction: () => Promise<void>;
+  handlePrediction: (image: any) => Promise<void>;
+  predictioning: boolean;
   textureDimensions: { height: number; width: number };
 };
 
@@ -34,6 +34,7 @@ export const useTensorFlow = (): Result => {
       }[]
     | null
   >(null);
+  const [predictioning, setPredictioning] = useState(false);
 
   const textureDimensions = useMemo(() => {
     let texture = {} as TextureProps;
@@ -86,57 +87,65 @@ export const useTensorFlow = (): Result => {
     setLoadedTensorflow(true);
   };
 
-  const handleCameraStream = (
-    images: IterableIterator<tf.Tensor3D>
-    // updatePreview: () => void,
-    // gl: ExpoWebGLRenderingContext,
-    // cameraTexture: WebGLTexture
-  ) => {
-    const loop = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const handleCameraStream = useCallback(
+    (
+      images: IterableIterator<tf.Tensor3D>
+      // updatePreview: () => void,
+      // gl: ExpoWebGLRenderingContext,
+      // cameraTexture: WebGLTexture
+    ) => {
+      // const loop = async () => {
+      //   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      //   const nextImageTensor = images.next().value;
+      //   console.info(nextImageTensor);
+      //   //
+      //   // do something with tensor here
+      //   //
+      //   // if autoRender is false you need the following two lines.
+      //   // updatePreview();
+      //   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      //   // gl.endFrameEXP();
+      //   const log = await new Promise((resolve) => {
+      //     setTimeout(() => resolve('ok'), [0]);
+      //   });
+      //   console.info(log);
+      //   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      //   requestAnimationFrame(loop);
+      // };
+      // void loop();
       const nextImageTensor = images.next().value;
       console.info(nextImageTensor);
+    },
+    []
+  );
 
-      //
-      // do something with tensor here
-      //
+  const handlePrediction = useCallback(async (image: any) => {
+    try {
+      setPredictioning(true);
 
-      // if autoRender is false you need the following two lines.
-      // updatePreview();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      // gl.endFrameEXP();
-      const log = await new Promise((resolve) => {
-        setTimeout(() => resolve('ok'), [0]);
-      });
-      console.info(log);
+      // decodeできるサイズは4096x4096までみたい
+      const model = await mobilenet.load();
+      // 画像サイズを取得{width, height}
+      const imageAssetsPath = Image.resolveAssetSource(image);
 
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      requestAnimationFrame(loop);
-    };
-    void loop();
-  };
+      console.info({ imageAssetsPath });
 
-  const handlePrediction = useCallback(async () => {
-    // decodeできるサイズは4096x4096まで
-    const model = await mobilenet.load();
+      // byte arrayへ変換
+      const response = await fetch(imageAssetsPath.uri, {}, { isBinary: true });
+      const imageBuffer = await response.arrayBuffer();
+      const imageData = new Uint8Array(imageBuffer);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const image = require('../../assets/soccer.jpg/');
-
-    // 画像サイズを取得{width, height}
-    const imageAssetsPath = Image.resolveAssetSource(image);
-
-    console.info({ imageAssetsPath });
-
-    // byte arrayへ変換
-    const response = await fetch(imageAssetsPath.uri, {}, { isBinary: true });
-    const imageBuffer = await response.arrayBuffer();
-    const imageData = new Uint8Array(imageBuffer);
-
-    const imageTensor = decodeJpeg(imageData);
-    const prediction = await model.classify(imageTensor);
-    console.info({ prediction });
-    setPrediction(prediction);
+      const imageTensor = decodeJpeg(imageData);
+      const prediction = await model.classify(imageTensor);
+      console.info({ prediction });
+      setPrediction(prediction);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    } finally {
+      setPredictioning(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -144,5 +153,13 @@ export const useTensorFlow = (): Result => {
     void initialSetting();
   }, []);
 
-  return { cameraPermission, loadedTensorflow, handleCameraStream, prediction, handlePrediction, textureDimensions };
+  return {
+    cameraPermission,
+    loadedTensorflow,
+    handleCameraStream,
+    prediction,
+    handlePrediction,
+    predictioning,
+    textureDimensions,
+  };
 };

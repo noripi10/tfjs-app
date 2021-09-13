@@ -2,22 +2,40 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import React from 'react';
-import { Box, HStack, Text, Center, Button, Heading, VStack, useColorModeValue, useColorMode } from 'native-base';
+import {
+  Box,
+  HStack,
+  Text,
+  Center,
+  Button,
+  Heading,
+  VStack,
+  useColorModeValue,
+  useColorMode,
+  Spinner,
+} from 'native-base';
 import { StyleSheet, Image } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
-import { Camera } from 'expo-camera';
+import { Camera, CameraProps } from 'expo-camera';
 import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
 
 import { useTensorFlow } from '../hooks/useTensorFlow';
 import { useColorScheme } from 'react-native-appearance';
 import { useLayoutEffect } from 'react';
 
-const TensorCamera = cameraWithTensors(Camera);
+const TensorCamera = cameraWithTensors<CameraProps>(Camera);
 
 export const TensorScreen: React.VFC = () => {
-  const { cameraPermission, loadedTensorflow, handleCameraStream, prediction, handlePrediction, textureDimensions } =
-    useTensorFlow();
+  const {
+    cameraPermission,
+    loadedTensorflow,
+    handleCameraStream,
+    prediction,
+    handlePrediction,
+    predictioning,
+    textureDimensions,
+  } = useTensorFlow();
 
   const colorScheme = useColorScheme();
   const { colorMode, toggleColorMode } = useColorMode();
@@ -33,9 +51,9 @@ export const TensorScreen: React.VFC = () => {
   return (
     <>
       <Box flex={1} bg={bg} safeArea>
-        <HStack flex={1} alignItems='center'>
+        <VStack flex={1} alignItems='center'>
           <Center
-            flex={2}
+            justifyContent='center'
             bg={{
               linearGradient: {
                 colors: ['lightBlue.300', 'violet.800'],
@@ -43,7 +61,7 @@ export const TensorScreen: React.VFC = () => {
                 end: [1, 1],
               },
             }}
-            height='100%'
+            w='100%'
           >
             <Text>{`react-native-appearance: ${colorScheme}`}</Text>
             <Text pb={2}>{`nativebase colorMode: ${colorMode ? colorMode : 'none'}`}</Text>
@@ -83,22 +101,23 @@ export const TensorScreen: React.VFC = () => {
               alignItems='center'
               py={0}
               m={2}
-              onPress={handlePrediction}
+              onPress={() => handlePrediction(require('../../assets/dog.jpeg'))}
             >
               <Text color='white'>prediction</Text>
             </Button>
           </Center>
-          <VStack flex={1} bgColor='red.800'>
+          <VStack flex={1} bgColor='emerald.500' w='100%' p='2'>
             <Heading m={1} size='sm'>
               result
             </Heading>
             <ScrollView>
-              <Text fontSize={11} color='#000'>
-                {prediction && JSON.stringify(prediction, null, 1)}
-              </Text>
+              {prediction &&
+                prediction.map(({ className, probability }) => (
+                  <Text key={className} color='white'>{`${className} 確率: ${Math.floor(probability * 100)}% `}</Text>
+                ))}
             </ScrollView>
           </VStack>
-        </HStack>
+        </VStack>
         <Center flex={1}>
           {/* <TensorCamera
           style={styles.camera}
@@ -113,9 +132,14 @@ export const TensorScreen: React.VFC = () => {
         /> */}
 
           {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
-          <Image source={require('../../assets/soccer.jpg')} resizeMode='cover' style={{ flex: 1, opacity: 1 }} />
+          <Image source={require('../../assets/dog.jpeg')} resizeMode='contain' style={{ flex: 1, opacity: 1 }} />
         </Center>
       </Box>
+      {predictioning && (
+        <Center position='absolute' top={0} left={0} right={0} bottom={0}>
+          <Spinner color='blue.500' size='large' />
+        </Center>
+      )}
       <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />
     </>
   );
