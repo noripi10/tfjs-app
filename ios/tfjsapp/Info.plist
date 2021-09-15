@@ -67,5 +67,7 @@
   <string>Allow $(PRODUCT_NAME) to use the camera</string>
   <key>NSMicrophoneUsageDescription</key>
   <string>Allow $(PRODUCT_NAME) to use the microphone</string>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>Allow $(PRODUCT_NAME) to use the photo libraly</string>
 </dict>
 </plist>

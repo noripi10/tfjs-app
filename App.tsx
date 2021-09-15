@@ -4,7 +4,8 @@ import React from 'react';
 import { NativeBaseProvider, extendTheme } from 'native-base';
 import { AppearanceProvider } from 'react-native-appearance';
 
-import { TensorScreen } from './src/screens/TensorScreen';
+import { Router } from './src/navigation/Router';
+import { AppProvider } from './src/provider/AppProvider';
 
 // Define the config
 const themeConfig = {
@@ -25,7 +26,9 @@ export default function App(): JSX.Element {
   return (
     <AppearanceProvider>
       <NativeBaseProvider theme={customTheme} config={config}>
-        <TensorScreen />
+        <AppProvider>
+          <Router />
+        </AppProvider>
       </NativeBaseProvider>
     </AppearanceProvider>
   );

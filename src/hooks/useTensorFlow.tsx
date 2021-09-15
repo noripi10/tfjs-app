@@ -5,6 +5,7 @@ import { Camera, PermissionResponse } from 'expo-camera';
 import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import { fetch, decodeJpeg } from '@tensorflow/tfjs-react-native';
+import { Asset } from 'react-native-image-picker';
 // import '@tensorflow/tfjs-backend-webgl';
 
 type TextureProps = { height: number; width: number };
@@ -35,6 +36,7 @@ export const useTensorFlow = (): Result => {
     | null
   >(null);
   const [predictioning, setPredictioning] = useState(false);
+  const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
 
   const textureDimensions = useMemo(() => {
     let texture = {} as TextureProps;
@@ -83,6 +85,9 @@ export const useTensorFlow = (): Result => {
   const initialSetting = async () => {
     // tensorflow初期化
     await tf.ready();
+    // mobilenet初期化
+    const model = await mobilenet.load();
+    setModel(model);
 
     setLoadedTensorflow(true);
   };
@@ -119,26 +124,34 @@ export const useTensorFlow = (): Result => {
     []
   );
 
-  const handlePrediction = useCallback(async (image: any) => {
+  const handlePrediction = useCallback(async (assets: Asset[]) => {
     try {
+      if (!!!cameraPermission && !!!loadedTensorflow) {
+        throw new Error('カメラ使用の及びtensorFlow初期設定が出来ていません');
+      }
+      if (predictioning) {
+        return;
+      }
       setPredictioning(true);
 
-      // decodeできるサイズは4096x4096までみたい
-      const model = await mobilenet.load();
       // 画像サイズを取得{width, height}
-      const imageAssetsPath = Image.resolveAssetSource(image);
-
-      console.info({ imageAssetsPath });
-
+      // decodeできるサイズは4096x4096までみたい
+      // const imageAssetsPath = Image.resolveAssetSource(image);
+      // console.info({ imageAssetsPath });
       // byte arrayへ変換
-      const response = await fetch(imageAssetsPath.uri, {}, { isBinary: true });
+      // const response = await fetch(require('../assets/**.jpg'), {}, { isBinary: true });
+      // const response = await fetch(imageAssetsPath.uri, {}, { isBinary: true });
+
+      const response = await fetch(assets[0].uri!, {}, { isBinary: true });
       const imageBuffer = await response.arrayBuffer();
       const imageData = new Uint8Array(imageBuffer);
 
       const imageTensor = decodeJpeg(imageData);
-      const prediction = await model.classify(imageTensor);
-      console.info({ prediction });
-      setPrediction(prediction);
+      if (model) {
+        const prediction = await model.classify(imageTensor);
+        console.info({ prediction });
+        setPrediction(prediction);
+      }
     } catch (error) {
       if (error instanceof Error) {
         console.error(error.message);
