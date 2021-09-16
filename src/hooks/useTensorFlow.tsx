@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { Alert, Platform, Image } from 'react-native';
 import { Camera, PermissionResponse } from 'expo-camera';
 // import Constants from 'expo-constants';
@@ -6,6 +6,7 @@ import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import { fetch, decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { Asset } from 'react-native-image-picker';
+import { AppContext } from '../provider/AppProvider';
 // import '@tensorflow/tfjs-backend-webgl';
 
 type TextureProps = { height: number; width: number };
@@ -23,9 +24,12 @@ type Result = {
   handlePrediction: (image: any) => Promise<void>;
   predictioning: boolean;
   textureDimensions: { height: number; width: number };
+  initialModel: () => Promise<mobilenet.MobileNet>;
 };
 
 export const useTensorFlow = (): Result => {
+  const { model } = useContext(AppContext);
+
   const [loadedTensorflow, setLoadedTensorflow] = useState<boolean | null>(null);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [prediction, setPrediction] = useState<
@@ -36,7 +40,9 @@ export const useTensorFlow = (): Result => {
     | null
   >(null);
   const [predictioning, setPredictioning] = useState(false);
-  const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
+
+  // modelはAppContextへ保存する（めちゃ遅いから起動時一発のみに抑える）
+  // const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
 
   const textureDimensions = useMemo(() => {
     let texture = {} as TextureProps;
@@ -81,15 +87,16 @@ export const useTensorFlow = (): Result => {
     }
   };
 
-  // tensorFlow init
+  // tensorFlow初期化
   const initialSetting = async () => {
     // tensorflow初期化
     await tf.ready();
-    // mobilenet初期化
-    const model = await mobilenet.load();
-    setModel(model);
-
     setLoadedTensorflow(true);
+  };
+
+  // mobilenet初期化＋モデルを返却
+  const initialModel = async () => {
+    return await mobilenet.load();
   };
 
   const handleCameraStream = useCallback(
@@ -126,8 +133,8 @@ export const useTensorFlow = (): Result => {
 
   const handlePrediction = useCallback(async (assets: Asset[]) => {
     try {
-      if (!!!cameraPermission && !!!loadedTensorflow) {
-        throw new Error('カメラ使用の及びtensorFlow初期設定が出来ていません');
+      if (!!!model) {
+        throw new Error('モデルの初期化ができていません');
       }
       if (predictioning) {
         return;
@@ -174,5 +181,6 @@ export const useTensorFlow = (): Result => {
     handlePrediction,
     predictioning,
     textureDimensions,
+    initialModel,
   };
 };

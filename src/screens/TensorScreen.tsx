@@ -23,10 +23,17 @@ import { launchImageLibrary, Asset } from 'react-native-image-picker';
 
 import { useTensorFlow } from '../hooks/useTensorFlow';
 import { useColorScheme } from 'react-native-appearance';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { StackParamList } from '../navigation/StackNavigator';
+import { AppButton } from '../components/AppButton';
 
 const TensorCamera = cameraWithTensors<CameraProps>(Camera);
 
-export const TensorScreen: React.VFC = () => {
+type Props = {
+  navigation: StackNavigationProp<StackParamList, 'main'>;
+};
+
+export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
   const {
     cameraPermission,
     loadedTensorflow,
@@ -61,70 +68,49 @@ export const TensorScreen: React.VFC = () => {
   }, [imageData]);
 
   useLayoutEffect(() => {
-    // system colorが変更された場合にはsystem colorへ統一する
-    if (colorScheme !== colorMode) {
-      toggleColorMode();
-    }
-  }, [colorScheme]);
+    navigation.setOptions({
+      headerBackTitle: 'back',
+      headerTitle: 'tensoflow sample',
+    });
+  }, [navigation]);
 
   return (
     <>
       <Box flex={1}>
-        <Box
-          flex={1}
-          bg={{
-            linearGradient: {
-              colors: ['lightBlue.300', 'violet.800'],
-              start: [0, 0],
-              end: [1, 1],
-            },
-          }}
-        >
-          <HStack flex={1} flexDirection='row' justifyContent='center' alignItems='center'>
+        <Stack flex={1}>
+          <HStack flex={1} alignItems='center' display='flex' flexDirection='column' pt={4}>
             <Box px={1}>
               {cameraPermission === null ? (
-                <Text>camera初期化中</Text>
+                <Text>camera initializing...</Text>
               ) : cameraPermission === false ? (
-                <Text>camera使用不可</Text>
+                <Text>camera can't use</Text>
               ) : (
-                <Text>camera設定完了</Text>
+                <Text>camera initialize complete</Text>
               )}
             </Box>
             <Box px={1}>
               {loadedTensorflow === null ? (
-                <Text>tensorflow初期化中</Text>
+                <Text>tensorflow initializing...</Text>
               ) : loadedTensorflow === false ? (
-                <Text>tensorflow使用不可</Text>
+                <Text>tensorflow can't use</Text>
               ) : (
-                <Text>tensorflow設定完了</Text>
+                <Text>tensorflow initialze complete</Text>
               )}
             </Box>
           </HStack>
-          <HStack flex={2} flexDirection='row' justifyContent='center' alignItems='center'>
-            <Button
-              bg='blue.700'
-              _text={{ color: '#fff' }}
-              borderRadius={999}
-              onPress={onSelectImage}
-              disabled={!!!loadedTensorflow || predictioning}
-            >
-              写真選択
-            </Button>
-            <Button
-              bg='blue.800'
-              width={120}
-              height={36}
-              borderRadius={999}
-              alignItems='center'
-              py={0}
-              m={2}
+          <HStack flex={2} justifyContent='center' alignItems='center'>
+            <AppButton bg='indigo.400' onPress={onSelectImage} disabled={!!!loadedTensorflow || predictioning}>
+              picture select
+            </AppButton>
+            <AppButton
+              bg='rose.400'
               disabled={!!!imageData || !!!cameraPermission || !!!loadedTensorflow || predictioning}
               onPress={onPrediction}
             >
-              <Text color='white'>prediction</Text>
-            </Button>
+              execute
+            </AppButton>
           </HStack>
-        </Box>
+        </Stack>
       </Box>
 
       <Center flex={3}>
@@ -159,11 +145,11 @@ export const TensorScreen: React.VFC = () => {
             prediction.map(({ className, probability }) => (
               <HStack key={className} px='0' p={1} borderWidth={StyleSheet.hairlineWidth} borderColor='#ddd'>
                 <Box w='75%'>
-                  <Text color='white'>{className}</Text>
+                  <Text>{className}</Text>
                 </Box>
                 <Text>確率：</Text>
                 <Box w='15%'>
-                  <Text textAlign='right' pr='3' color='white'>
+                  <Text textAlign='right' pr='3'>
                     {Math.round(probability * 1000) / 10}%
                   </Text>
                 </Box>
