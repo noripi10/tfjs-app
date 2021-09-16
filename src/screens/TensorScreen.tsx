@@ -144,10 +144,10 @@ export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
           {prediction &&
             prediction.map(({ className, probability }) => (
               <HStack key={className} px='0' p={1} borderWidth={StyleSheet.hairlineWidth} borderColor='#ddd'>
-                <Box w='75%'>
+                <Box w='65%'>
                   <Text>{className}</Text>
                 </Box>
-                <Text>確率：</Text>
+                <Text>prediction：</Text>
                 <Box w='15%'>
                   <Text textAlign='right' pr='3'>
                     {Math.round(probability * 1000) / 10}%
