@@ -13,7 +13,7 @@ type Props = {
 };
 
 export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
-  const { model } = useContext(AppContext);
+  const { mobileNetModel, handPoseModel } = useContext(AppContext);
   const colorScheme = useColorScheme();
   const { colorMode, toggleColorMode } = useColorMode();
 
@@ -35,8 +35,20 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           <AppButton bg='red.500' onPress={toggleColorMode}>
             change theme
           </AppButton>
-          <AppButton disabled={!!!model} isLoading={!!!model} onPress={() => navigation.navigate('main')}>
+          <AppButton
+            disabled={!!!mobileNetModel}
+            isLoading={!!!mobileNetModel}
+            onPress={() => navigation.navigate('mobilenet')}
+          >
             picture analyze
+          </AppButton>
+          <AppButton
+            bg='teal.400'
+            disabled={!!!handPoseModel}
+            isLoading={!!!handPoseModel}
+            onPress={() => navigation.navigate('mobilenet')}
+          >
+            handpose analyze
           </AppButton>
         </VStack>
       </HStack>

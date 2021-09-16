@@ -4,9 +4,11 @@ import { Camera, PermissionResponse } from 'expo-camera';
 // import Constants from 'expo-constants';
 import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
+import * as hondPose from '@tensorflow-models/handpose';
 import { fetch, decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { Asset } from 'react-native-image-picker';
 import { AppContext } from '../provider/AppProvider';
+import { ExpoWebGLRenderingContext } from 'expo-gl';
 // import '@tensorflow/tfjs-backend-webgl';
 
 type TextureProps = { height: number; width: number };
@@ -24,11 +26,11 @@ type Result = {
   handlePrediction: (image: any) => Promise<void>;
   predictioning: boolean;
   textureDimensions: { height: number; width: number };
-  initialModel: () => Promise<mobilenet.MobileNet>;
+  initialModel: () => Promise<{ mobileNetModel: mobilenet.MobileNet; handPoseModel: hondPose.HandPose }>;
 };
 
 export const useTensorFlow = (): Result => {
-  const { model } = useContext(AppContext);
+  const { mobileNetModel } = useContext(AppContext);
 
   const [loadedTensorflow, setLoadedTensorflow] = useState<boolean | null>(null);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
@@ -94,9 +96,11 @@ export const useTensorFlow = (): Result => {
     setLoadedTensorflow(true);
   };
 
-  // mobilenet初期化＋モデルを返却
+  // 各モデルの初期化＋モデルを返却
   const initialModel = async () => {
-    return await mobilenet.load();
+    const mobileNetModel = await mobilenet.load();
+    const handPoseModel = await hondPose.load();
+    return { mobileNetModel, handPoseModel };
   };
 
   const handleCameraStream = useCallback(
@@ -106,34 +110,33 @@ export const useTensorFlow = (): Result => {
       // gl: ExpoWebGLRenderingContext,
       // cameraTexture: WebGLTexture
     ) => {
-      // const loop = async () => {
-      //   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      //   const nextImageTensor = images.next().value;
-      //   console.info(nextImageTensor);
-      //   //
-      //   // do something with tensor here
-      //   //
-      //   // if autoRender is false you need the following two lines.
-      //   // updatePreview();
-      //   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      //   // gl.endFrameEXP();
-      //   const log = await new Promise((resolve) => {
-      //     setTimeout(() => resolve('ok'), [0]);
-      //   });
-      //   console.info(log);
-      //   // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      //   requestAnimationFrame(loop);
-      // };
-      // void loop();
-      const nextImageTensor = images.next().value;
-      console.info(nextImageTensor);
+      hondPose.load().then((model) => {
+        const loop = async () => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const nextImageTensor = images.next().value;
+          console.info(nextImageTensor);
+          const predictions = await model.estimateHands(nextImageTensor);
+          console.log(predictions);
+          //
+          // do something with tensor here
+          //
+          // if autoRender is false you need the following two lines.
+          // updatePreview();
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          // gl.endFrameEXP();
+
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          requestAnimationFrame(loop);
+        };
+        void loop();
+      });
     },
     []
   );
 
   const handlePrediction = useCallback(async (assets: Asset[]) => {
     try {
-      if (!!!model) {
+      if (!!!mobileNetModel) {
         throw new Error('モデルの初期化ができていません');
       }
       if (predictioning) {
@@ -154,8 +157,8 @@ export const useTensorFlow = (): Result => {
       const imageData = new Uint8Array(imageBuffer);
 
       const imageTensor = decodeJpeg(imageData);
-      if (model) {
-        const prediction = await model.classify(imageTensor);
+      if (mobileNetModel) {
+        const prediction = await mobileNetModel.classify(imageTensor);
         console.info({ prediction });
         setPrediction(prediction);
       }
