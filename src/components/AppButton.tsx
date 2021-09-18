@@ -13,7 +13,7 @@ type Props = {
 
 export const AppButton: React.VFC<Props> = ({
   bg = 'primary.400',
-  width = 170,
+  width = 175,
   height = 36,
   onPress,
   disabled = false,

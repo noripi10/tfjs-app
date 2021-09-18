@@ -30,7 +30,7 @@ type Result = {
 };
 
 export const useTensorFlow = (): Result => {
-  const { mobileNetModel } = useContext(AppContext);
+  const { mobileNetModel, handPoseModel } = useContext(AppContext);
 
   const [loadedTensorflow, setLoadedTensorflow] = useState<boolean | null>(null);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
@@ -110,26 +110,24 @@ export const useTensorFlow = (): Result => {
       // gl: ExpoWebGLRenderingContext,
       // cameraTexture: WebGLTexture
     ) => {
-      hondPose.load().then((model) => {
-        const loop = async () => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const nextImageTensor = images.next().value;
-          console.info(nextImageTensor);
-          const predictions = await model.estimateHands(nextImageTensor);
-          console.log(predictions);
-          //
-          // do something with tensor here
-          //
-          // if autoRender is false you need the following two lines.
-          // updatePreview();
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-          // gl.endFrameEXP();
+      const loop = async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const nextImageTensor = images.next().value;
+        console.info(nextImageTensor);
+        const predictions = await handPoseModel!.estimateHands(nextImageTensor);
+        console.log(predictions);
+        //
+        // do something with tensor here
+        //
+        // if autoRender is false you need the following two lines.
+        // updatePreview();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        // gl.endFrameEXP();
 
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          requestAnimationFrame(loop);
-        };
-        void loop();
-      });
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        requestAnimationFrame(loop);
+      };
+      void loop();
     },
     []
   );

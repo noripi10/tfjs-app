@@ -2,23 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import React, { useState, useLayoutEffect, useCallback } from 'react';
-import {
-  Box,
-  HStack,
-  Text,
-  Center,
-  Button,
-  Heading,
-  useColorMode,
-  Spinner,
-  ScrollView,
-  Flex,
-  Stack,
-} from 'native-base';
+import { Box, HStack, VStack, Text, Center, Heading, useColorMode, Spinner, ScrollView, Stack } from 'native-base';
 import { StyleSheet, Image, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Camera, CameraProps } from 'expo-camera';
-import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 
 import { useTensorFlow } from '../hooks/useTensorFlow';
@@ -27,13 +13,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { StackParamList } from '../navigation/StackNavigator';
 import { AppButton } from '../components/AppButton';
 
-const TensorCamera = cameraWithTensors<CameraProps>(Camera);
-
 type Props = {
-  navigation: StackNavigationProp<StackParamList, 'main'>;
+  navigation: StackNavigationProp<StackParamList, 'mobilenet'>;
 };
 
-export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
+export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
   const {
     cameraPermission,
     loadedTensorflow,
@@ -78,7 +62,7 @@ export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
     <>
       <Box flex={1}>
         <Stack flex={1}>
-          <HStack flex={1} alignItems='center' display='flex' flexDirection='column' pt={4}>
+          <VStack flex={1} alignItems='center' display='flex' pt={4}>
             <Box px={1}>
               {cameraPermission === null ? (
                 <Text>camera initializing...</Text>
@@ -97,7 +81,7 @@ export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
                 <Text>tensorflow initialze complete</Text>
               )}
             </Box>
-          </HStack>
+          </VStack>
           <HStack flex={2} justifyContent='center' alignItems='center'>
             <AppButton bg='indigo.400' onPress={onSelectImage} disabled={!!!loadedTensorflow || predictioning}>
               picture select
@@ -114,18 +98,6 @@ export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
       </Box>
 
       <Center flex={3}>
-        {/* <TensorCamera
-          style={styles.camera}
-          type={Camera.Constants.Type.front}
-          cameraTextureHeight={textureDimensions.height}
-          cameraTextureWidth={textureDimensions.width}
-          resizeHeight={200}
-          resizeWidth={152}
-          resizeDepth={3}
-          onReady={handleCameraStream}
-          autorender={true}
-        /> */}
-
         {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
         {imageData && (
           <Image
@@ -159,7 +131,7 @@ export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
       </Box>
 
       {predictioning && (
-        <Center position='absolute' top={0} left={0} right={0} bottom={0}>
+        <Center position='absolute' top={0} left={0} right={0} bottom={0} bgColor={'rgba(0,0,0,.5)'}>
           <Spinner color='blue.500' size='large' />
         </Center>
       )}
@@ -167,10 +139,3 @@ export const TensorScreen: React.VFC<Props> = ({ navigation }: Props) => {
     </>
   );
 };
-
-// const styles = StyleSheet.create({
-//   camera: {
-//     justifyContent: 'flex-start',
-//     backgroundColor: 'blue',
-//   },
-// });
