@@ -1,6 +1,8 @@
-import React, { useContext } from 'react';
-import { Box, HStack, Text, Button, VStack, useColorMode, Center } from 'native-base';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
+import { Text, VStack, useColorMode, Center } from 'native-base';
 import { StatusBar } from 'expo-status-bar';
+import { AdMobBanner, getPermissionsAsync, requestPermissionsAsync, PermissionStatus } from 'expo-ads-admob';
 import { useColorScheme } from 'react-native-appearance';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -9,16 +11,47 @@ import { AppContext } from '../provider/AppProvider';
 import { AppButton } from '../components/AppButton';
 import { useTensorFlow } from '../hooks/useTensorFlow';
 
+const unitId = Platform.select({
+  ios: __DEV__ ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-7379270123809470/8398846802',
+  android: __DEV__ ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7379270123809470/1450295075',
+});
+
 type Props = {
   navigation: StackNavigationProp<StackParamList, 'welcome'>;
 };
 
 export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
+  const [canTracking, setCanTracking] = useState<boolean | null>(null);
   const { mobileNetModel, handPoseModel } = useContext(AppContext);
   const colorScheme = useColorScheme();
   const { colorMode, toggleColorMode } = useColorMode();
 
   const { cameraPermission } = useTensorFlow();
+
+  const trackingSetting = useCallback(async () => {
+    const { status } = await getPermissionsAsync();
+
+    if (status === PermissionStatus.GRANTED) {
+      setCanTracking(true);
+    } else {
+      const { status: requestStatus } = await requestPermissionsAsync();
+      if (requestStatus === PermissionStatus.GRANTED) {
+        setCanTracking(true);
+      } else {
+        setCanTracking(false);
+      }
+    }
+
+    setCanTracking(false);
+  }, []);
+
+  useEffect(() => {
+    trackingSetting();
+  }, []);
+
+  if (canTracking === null) {
+    return null;
+  }
 
   return (
     <>
@@ -33,6 +66,12 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           },
         }}
       >
+        <AdMobBanner
+          bannerSize='largeBanner'
+          adUnitID={unitId}
+          servePersonalizedAds={canTracking}
+          onDidFailToReceiveAdWithError={(string: any) => console.log(string)}
+        />
         <VStack flex={1} alignItems='center' pt={8}>
           <Text>{`react-native-appearance: ${colorScheme}`}</Text>
           <Text pb={2}>{`nativebase colorMode: ${colorMode ? colorMode : 'none'}`}</Text>

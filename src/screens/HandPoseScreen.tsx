@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { Box, Text, Button } from 'native-base';
+import { Box, Text, IconButton } from 'native-base';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import Constants from 'expo-constants';
 import { Camera, CameraProps } from 'expo-camera';
@@ -15,6 +16,7 @@ import { Coords3D } from '@tensorflow-models/handpose/dist/pipeline';
 import { useTensorFlow } from '../hooks/useTensorFlow';
 import { StyleSheet } from 'react-native';
 import { AppContext } from '../provider/AppProvider';
+import { right } from 'styled-system';
 
 const TensorCamera = cameraWithTensors<CameraProps>(Camera);
 
@@ -34,11 +36,18 @@ const fingerJoints = {
 export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
   const { handPoseModel } = useContext(AppContext);
   const { textureDimensions } = useTensorFlow();
+  const [cameraDirection, setCameraDirection] = useState(Camera.Constants.Type.back);
 
-  const { width, height } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   const [canRender, setCanRender] = useState(false);
-  const [landmarks, setLandmarks] = useState<Coords3D>();
+  const [landmarks, setLandmarks] = useState<Coords3D | null>();
+  const [handBox, setHandBox] = useState<{
+    topLeft: [number, number];
+    bottomRight: [number, number];
+    boxHeight: number;
+    boxWidth: number;
+  } | null>();
   const timerRef = useRef<NodeJS.Timer>();
   const animatioRef = useRef<number | null>(null);
 
@@ -56,30 +65,45 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
         // do something with tensor here
         //
         const predictions = await handPoseModel!.estimateHands(nextImageTensor);
+
         if (predictions.length) {
+          const prediction = predictions[0];
+          const {
+            boundingBox: { topLeft, bottomRight },
+          } = prediction;
+
+          const boxHeight = bottomRight[0] - topLeft[0];
+          const boxWidth = bottomRight[1] - topLeft[1];
+          setHandBox({ topLeft, bottomRight, boxHeight, boxWidth });
+
+          // ランドマークの設定はここをコメントアウト
           // console.log('exist hand (^ ^)!!! prediction:' + predictions.length);
-          predictions.forEach(({ landmarks }) => {
-            // for (let j = 0; Object.keys(fingerJoints).length; j++) {
-            //   const finger = Object.keys(fingerJoints)[j];
-            //   for (let k = 0; k < fingerJoints[finger].length - 1; k++) {
-            //     const firstJointIndex = fingerJoints[finger][k];
-            //     const secondJointIndex = fingerJoints[finger][k + 1];
-            //     console.log({ firstJointIndex });
-            //     console.log({ secondJointIndex });
-            //   }
-            // }
-            setLandmarks(landmarks);
-            // if (animatioRef.current) cancelAnimationFrame(animatioRef.current);
-            // if (timerRef.current) clearInterval(timerRef.current);
-            // console.log(landmarks);
-          });
+          // predictions.forEach(({ landmarks }) => {
+          //   // for (let j = 0; Object.keys(fingerJoints).length; j++) {
+          //   //   const finger = Object.keys(fingerJoints)[j];
+          //   //   for (let k = 0; k < fingerJoints[finger].length - 1; k++) {
+          //   //     const firstJointIndex = fingerJoints[finger][k];
+          //   //     const secondJointIndex = fingerJoints[finger][k + 1];
+          //   //     console.log({ firstJointIndex });
+          //   //     console.log({ secondJointIndex });
+          //   //   }
+          //   // }
+          //   setLandmarks(landmarks);
+          //   // if (animatioRef.current) cancelAnimationFrame(animatioRef.current);
+          //   // if (timerRef.current) clearInterval(timerRef.current);
+          //   // console.log(landmarks);
+          // });
 
           // console.log(predictions[0].landmarks);
         } else {
           console.log('no hand (> <)');
-          if (landmarks && landmarks.length) {
-            setLandmarks([] as Coords3D);
-          }
+          setHandBox(null);
+
+          // ランドマークの設定はここをコメントアウト
+          // if (landmarks && landmarks.length) {
+          //   // setLandmarks([] as Coords3D);
+          //   setLandmarks(null);
+          // }
         }
         // if autoRender is false you need the following two lines.
         // updatePreview();
@@ -117,15 +141,35 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
         <>
           <TensorCamera
             style={styles.camera}
-            type={Camera.Constants.Type.back}
+            type={cameraDirection}
             cameraTextureHeight={textureDimensions.height}
             cameraTextureWidth={textureDimensions.width}
-            resizeHeight={400}
-            resizeWidth={304}
+            resizeHeight={200}
+            resizeWidth={153}
             resizeDepth={3}
             onReady={handleCameraStream}
             autorender={canRender}
+            zoom={0}
           />
+          <Box position='absolute' top={30} right={15} zIndex={10}>
+            <IconButton
+              variant='ghost'
+              icon={
+                <MaterialCommunityIcons
+                  name={cameraDirection === Camera.Constants.Type.back ? 'camera-front' : 'camera-rear-variant'}
+                  color='white'
+                  size={32}
+                  onPress={() =>
+                    setCameraDirection((prev) =>
+                      prev === Camera.Constants.Type.back ? Camera.Constants.Type.front : Camera.Constants.Type.back
+                    )
+                  }
+                />
+              }
+            />
+          </Box>
+
+          {/* svg api で描画 */}
           {/* <Svg height='100%' width='100%'>
             {landmarks &&
               landmarks.map((landmark, index) => (
@@ -140,7 +184,9 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
                 />
               ))}
           </Svg> */}
-          {landmarks?.length
+
+          {/* ✋のランドマークを点で描画 */}
+          {/* {landmarks?.length
             ? landmarks.map((landmark, index) => (
                 <Box
                   bgColor={'#0c7a5b'}
@@ -150,20 +196,27 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
                   left={landmark[0]}
                   width={3}
                   height={3}
-                  borderRadius={999}
+                  borderRadius={100}
                   borderColor={'#000'}
                   borderWidth={StyleSheet.hairlineWidth}
                   zIndex={999}
                 />
               ))
-            : null}
+            : null} */}
+
+          {/* ✋の位置をボックス描画 */}
+          <Box
+            position='absolute'
+            top={handBox?.topLeft[1]}
+            left={handBox?.topLeft[1]}
+            height={handBox?.boxHeight}
+            width={handBox?.boxWidth}
+            borderWidth={2}
+            borderColor='red.800'
+            zIndex={100}
+          />
         </>
       ) : (
-        // <Camera style={styles.camera}>
-        //   <Button bgColor='green.800' width={100} height={100} borderRadius={999}>
-        //     撮影
-        //   </Button>
-        // </Camera>
         <Text>camera can't use. only real device</Text>
       )}
     </Box>
@@ -173,6 +226,8 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   camera: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
     zIndex: -1,
   },
 });
