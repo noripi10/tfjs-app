@@ -16,6 +16,7 @@ type TextureProps = { height: number; width: number };
 type Result = {
   cameraPermission: boolean | null;
   loadedTensorflow: boolean | null;
+  initialSetting: () => Promise<void>;
   handleCameraStream: (image: IterableIterator<tf.Tensor3D>) => void;
   prediction:
     | {
@@ -89,8 +90,10 @@ export const useTensorFlow = (): Result => {
     }
   };
 
-  // tensorFlow初期化
+  // permission + tensorFlow初期化
   const initialSetting = async () => {
+    // camera permission
+    permissionHandler();
     // tensorflow初期化
     await tf.ready();
     setLoadedTensorflow(true);
@@ -170,13 +173,13 @@ export const useTensorFlow = (): Result => {
   }, []);
 
   useEffect(() => {
-    void permissionHandler();
     void initialSetting();
   }, []);
 
   return {
     cameraPermission,
     loadedTensorflow,
+    initialSetting,
     handleCameraStream,
     prediction,
     handlePrediction,

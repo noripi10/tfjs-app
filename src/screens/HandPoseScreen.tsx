@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Box, Text, IconButton } from 'native-base';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import Constants from 'expo-constants';
 import { Camera, CameraProps } from 'expo-camera';
+import { CameraType } from 'expo-camera/build/Camera.types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { StackParamList } from '../navigation/StackNavigator';
 import { RouteProp } from '@react-navigation/core';
@@ -16,7 +17,6 @@ import { Coords3D } from '@tensorflow-models/handpose/dist/pipeline';
 import { useTensorFlow } from '../hooks/useTensorFlow';
 import { StyleSheet } from 'react-native';
 import { AppContext } from '../provider/AppProvider';
-import { right } from 'styled-system';
 
 const TensorCamera = cameraWithTensors<CameraProps>(Camera);
 
@@ -25,18 +25,25 @@ type Props = {
   route: RouteProp<StackParamList, 'handpose'>;
 };
 
-const fingerJoints = {
-  thumb: [0, 1, 2, 3, 4],
-  indexFinger: [0, 5, 6, 7, 8],
-  middleFinger: [0, 9, 10, 11, 12],
-  ringFinger: [0, 13, 14, 15, 16],
-  pinky: [0, 17, 18, 19, 20],
-};
+// const fingerJoints = {
+//   thumb: [0, 1, 2, 3, 4],
+//   indexFinger: [0, 5, 6, 7, 8],
+//   middleFinger: [0, 9, 10, 11, 12],
+//   ringFinger: [0, 13, 14, 15, 16],
+//   pinky: [0, 17, 18, 19, 20],
+// };
+// const fingerColor = [
+//   [...Array(5).keys()].map((num) => ({ num, color: 'primary.400' })),
+//   [...Array(5).keys()].map((num) => ({ num, color: 'primary.400' })),
+//   [...Array(5).keys()].map((num) => ({ num, color: 'primary.400' })),
+//   [...Array(5).keys()].map((num) => ({ num, color: 'primary.400' })),
+//   [...Array(5).keys()].map((num) => ({ num, color: 'primary.400' })),
+// ];
 
 export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
   const { handPoseModel } = useContext(AppContext);
   const { textureDimensions } = useTensorFlow();
-  const [cameraDirection, setCameraDirection] = useState(Camera.Constants.Type.back);
+  const [cameraDirection, setCameraDirection] = useState<CameraType>(Camera.Constants.Type.front);
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
@@ -67,42 +74,43 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
         const predictions = await handPoseModel!.estimateHands(nextImageTensor);
 
         if (predictions.length) {
-          const prediction = predictions[0];
-          const {
-            boundingBox: { topLeft, bottomRight },
-          } = prediction;
+          // const prediction = predictions[0];
+          // const {
+          //   boundingBox: { topLeft, bottomRight },
+          // } = prediction;
 
-          const boxHeight = bottomRight[0] - topLeft[0];
-          const boxWidth = bottomRight[1] - topLeft[1];
-          setHandBox({ topLeft, bottomRight, boxHeight, boxWidth });
+          // const boxHeight = bottomRight[0] - topLeft[0];
+          // const boxWidth = bottomRight[1] - topLeft[1];
+          // setHandBox({ topLeft, bottomRight, boxHeight, boxWidth });
 
           // ランドマークの設定はここをコメントアウト
           // console.log('exist hand (^ ^)!!! prediction:' + predictions.length);
-          // predictions.forEach(({ landmarks }) => {
-          //   // for (let j = 0; Object.keys(fingerJoints).length; j++) {
-          //   //   const finger = Object.keys(fingerJoints)[j];
-          //   //   for (let k = 0; k < fingerJoints[finger].length - 1; k++) {
-          //   //     const firstJointIndex = fingerJoints[finger][k];
-          //   //     const secondJointIndex = fingerJoints[finger][k + 1];
-          //   //     console.log({ firstJointIndex });
-          //   //     console.log({ secondJointIndex });
-          //   //   }
-          //   // }
-          //   setLandmarks(landmarks);
-          //   // if (animatioRef.current) cancelAnimationFrame(animatioRef.current);
-          //   // if (timerRef.current) clearInterval(timerRef.current);
-          //   // console.log(landmarks);
-          // });
+          predictions.forEach(({ landmarks }) => {
+            // for (let j = 0; Object.keys(fingerJoints).length; j++) {
+            //   const finger = Object.keys(fingerJoints)[j];
+            //   for (let k = 0; k < fingerJoints[finger].length - 1; k++) {
+            //     const firstJointIndex = fingerJoints[finger][k];
+            //     const secondJointIndex = fingerJoints[finger][k + 1];
+            //     console.log({ firstJointIndex });
+            //     console.log({ secondJointIndex });
+            //   }
+            // }
+
+            setLandmarks(landmarks);
+            // if (animatioRef.current) cancelAnimationFrame(animatioRef.current);
+            // if (timerRef.current) clearInterval(timerRef.current);
+            // console.log(landmarks);
+          });
 
           // console.log(predictions[0].landmarks);
         } else {
-          console.log('no hand (> <)');
-          setHandBox(null);
+          // console.log('no hand (> <)');
+          // setHandBox(null);
 
           // ランドマークの設定はここをコメントアウト
+          setLandmarks(null);
           // if (landmarks && landmarks.length) {
-          //   // setLandmarks([] as Coords3D);
-          //   setLandmarks(null);
+          //   setLandmarks([] as Coords3D);
           // }
         }
         // if autoRender is false you need the following two lines.
@@ -144,8 +152,8 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
             type={cameraDirection}
             cameraTextureHeight={textureDimensions.height}
             cameraTextureWidth={textureDimensions.width}
-            resizeHeight={200}
-            resizeWidth={153}
+            resizeHeight={400}
+            resizeWidth={300}
             resizeDepth={3}
             onReady={handleCameraStream}
             autorender={canRender}
@@ -186,10 +194,20 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
           </Svg> */}
 
           {/* ✋のランドマークを点で描画 */}
-          {/* {landmarks?.length
+          {landmarks?.length
             ? landmarks.map((landmark, index) => (
                 <Box
-                  bgColor={'#0c7a5b'}
+                  bgColor={
+                    index <= 4
+                      ? 'primary.400'
+                      : index <= 8
+                      ? 'secondary.400'
+                      : index <= 12
+                      ? 'tertiary.400'
+                      : index <= 16
+                      ? 'violet.400'
+                      : 'blue.400'
+                  }
                   key={`handmark-${index.toString()}`}
                   position='absolute'
                   top={landmark[1]}
@@ -202,10 +220,10 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
                   zIndex={999}
                 />
               ))
-            : null} */}
+            : null}
 
           {/* ✋の位置をボックス描画 */}
-          <Box
+          {/* <Box
             position='absolute'
             top={handBox?.topLeft[1]}
             left={handBox?.topLeft[1]}
@@ -214,7 +232,23 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
             borderWidth={2}
             borderColor='red.800'
             zIndex={100}
-          />
+          /> */}
+          <Box
+            flex={1}
+            flexDirection='column'
+            justifyContent='center'
+            alignItems='center'
+            position='absolute'
+            top={0}
+            left={0}
+            width='100%'
+            height='100%'
+            zIndex={999}
+          >
+            <FontAwesome name='hand-grab-o' size={64} color='#fbbf24' />
+            <FontAwesome name='hand-peace-o' size={64} color='#fbbf24' />
+            <FontAwesome name='hand-paper-o' size={64} color='#fbbf24' />
+          </Box>
         </>
       ) : (
         <Text>camera can't use. only real device</Text>

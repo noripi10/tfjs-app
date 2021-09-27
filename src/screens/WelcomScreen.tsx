@@ -21,12 +21,15 @@ type Props = {
 };
 
 export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
-  const [canTracking, setCanTracking] = useState<boolean | null>(null);
-  const { mobileNetModel, handPoseModel } = useContext(AppContext);
+  // react-native-appearance
   const colorScheme = useColorScheme();
+  // native-base
   const { colorMode, toggleColorMode } = useColorMode();
 
-  const { cameraPermission } = useTensorFlow();
+  const { mobileNetModel, setMobileNetModel, handPoseModel, setHandPoseModel } = useContext(AppContext);
+  const { initialModel, cameraPermission } = useTensorFlow();
+
+  const [canTracking, setCanTracking] = useState<boolean | null>(null);
 
   const trackingSetting = useCallback(async () => {
     const { status } = await getPermissionsAsync();
@@ -46,7 +49,13 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
   }, []);
 
   useEffect(() => {
+    // tracking setting
     trackingSetting();
+    // initial tensorflow model
+    initialModel().then((data) => {
+      setMobileNetModel(data.mobileNetModel);
+      setHandPoseModel(data.handPoseModel);
+    });
   }, []);
 
   if (canTracking === null) {
