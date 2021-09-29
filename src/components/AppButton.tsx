@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Text } from 'native-base';
+import { AppText } from './index';
 
 type Props = {
   bg?: string;
@@ -8,17 +9,19 @@ type Props = {
   onPress: () => void;
   disabled?: boolean;
   isLoading?: boolean;
+  pressedColor?: string;
   children: string;
 };
 
-export const AppButton: React.VFC<Props> = ({
+const AppButton: React.VFC<Props> = ({
   bg = 'primary.400',
   width = 175,
   height = 36,
   onPress,
   disabled = false,
   isLoading = false,
-  children,
+  pressedColor,
+  children = 'orange.300',
 }: Props) => {
   return (
     <Button
@@ -38,8 +41,11 @@ export const AppButton: React.VFC<Props> = ({
         shadowOpacity: 3,
         shadowRadius: 4,
       }}
+      _pressed={{ backgroundColor: pressedColor }}
     >
-      <Text>{children}</Text>
+      <AppText>{children}</AppText>
     </Button>
   );
 };
+
+export default AppButton;

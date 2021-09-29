@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Box, Text, IconButton } from 'native-base';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
+// import Svg, { Circle } from 'react-native-svg';
 import Constants from 'expo-constants';
 import { Camera, CameraProps } from 'expo-camera';
 import { CameraType } from 'expo-camera/build/Camera.types';
@@ -17,6 +17,7 @@ import { Coords3D } from '@tensorflow-models/handpose/dist/pipeline';
 import { useTensorFlow } from '../hooks/useTensorFlow';
 import { StyleSheet } from 'react-native';
 import { AppContext } from '../provider/AppProvider';
+import { AppText } from '../components';
 
 const TensorCamera = cameraWithTensors<CameraProps>(Camera);
 
@@ -129,6 +130,12 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
     []
   );
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'tensoflow ★handpose★',
+    });
+  }, []);
+
   useEffect(() => {
     setCanRender(true);
 
@@ -159,22 +166,25 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
             autorender={canRender}
             zoom={0}
           />
-          <Box position='absolute' top={30} right={15} zIndex={10}>
-            <IconButton
-              variant='ghost'
-              icon={
-                <MaterialCommunityIcons
-                  name={cameraDirection === Camera.Constants.Type.back ? 'camera-front' : 'camera-rear-variant'}
-                  color='white'
-                  size={32}
-                  onPress={() =>
-                    setCameraDirection((prev) =>
-                      prev === Camera.Constants.Type.back ? Camera.Constants.Type.front : Camera.Constants.Type.back
-                    )
-                  }
-                />
-              }
-            />
+          <Box position='absolute' top={30} right={15} zIndex={10} justifyContent='center' alignItems='center'>
+            <>
+              <IconButton
+                variant='ghost'
+                icon={
+                  <MaterialCommunityIcons
+                    name={cameraDirection === Camera.Constants.Type.back ? 'camera-front' : 'camera-rear-variant'}
+                    color='white'
+                    size={32}
+                    onPress={() =>
+                      setCameraDirection((prev) =>
+                        prev === Camera.Constants.Type.back ? Camera.Constants.Type.front : Camera.Constants.Type.back
+                      )
+                    }
+                  />
+                }
+              />
+              <AppText fontSize={10}>{cameraDirection === Camera.Constants.Type.back ? 'front→' : 'back→'}</AppText>
+            </>
           </Box>
 
           {/* svg api で描画 */}
@@ -233,7 +243,8 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
             borderColor='red.800'
             zIndex={100}
           /> */}
-          <Box
+
+          {/* <Box
             flex={1}
             flexDirection='column'
             justifyContent='center'
@@ -248,7 +259,7 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
             <FontAwesome name='hand-grab-o' size={64} color='#fbbf24' />
             <FontAwesome name='hand-peace-o' size={64} color='#fbbf24' />
             <FontAwesome name='hand-paper-o' size={64} color='#fbbf24' />
-          </Box>
+          </Box> */}
         </>
       ) : (
         <Text>camera can't use. only real device</Text>

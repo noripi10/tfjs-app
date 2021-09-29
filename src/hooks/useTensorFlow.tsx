@@ -50,15 +50,9 @@ export const useTensorFlow = (): Result => {
   const textureDimensions = useMemo(() => {
     let texture = {} as TextureProps;
     if (Platform.OS === 'ios') {
-      texture = {
-        height: 1920,
-        width: 1080,
-      };
+      texture = { height: 1920, width: 1080 };
     } else {
-      texture = {
-        height: 1200,
-        width: 1600,
-      };
+      texture = { height: 1200, width: 1600 };
     }
 
     return texture;

@@ -1,15 +1,15 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { Text, VStack, useColorMode, Center } from 'native-base';
-import { StatusBar } from 'expo-status-bar';
+import { VStack, useColorMode, Center, Stack, Box } from 'native-base';
 import { AdMobBanner, getPermissionsAsync, requestPermissionsAsync, PermissionStatus } from 'expo-ads-admob';
+import LottieView from 'lottie-react-native';
 import { useColorScheme } from 'react-native-appearance';
 import { StackNavigationProp } from '@react-navigation/stack';
 
-import { StackParamList } from '../navigation/StackNavigator';
-import { AppContext } from '../provider/AppProvider';
-import { AppButton } from '../components/AppButton';
 import { useTensorFlow } from '../hooks/useTensorFlow';
+import { AppContext } from '../provider/AppProvider';
+import { StackParamList } from '../navigation/StackNavigator';
+import { AppButton, AppText } from '../components';
 
 const unitId = Platform.select({
   ios: __DEV__ ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-7379270123809470/8398846802',
@@ -63,48 +63,49 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
   }
 
   return (
-    <>
-      <Center
-        width='100%'
-        height='100%'
-        bg={{
-          linearGradient: {
-            colors: ['lightBlue.300', 'violet.800'],
-            start: [0, 0],
-            end: [1, 1],
-          },
-        }}
-      >
-        <AdMobBanner
-          bannerSize='largeBanner'
-          adUnitID={unitId}
-          servePersonalizedAds={canTracking}
-          onDidFailToReceiveAdWithError={(string: any) => console.log(string)}
-        />
-        <VStack flex={1} alignItems='center' pt={8}>
-          <Text>{`react-native-appearance: ${colorScheme}`}</Text>
-          <Text pb={2}>{`nativebase colorMode: ${colorMode ? colorMode : 'none'}`}</Text>
-          <AppButton bg='red.500' onPress={toggleColorMode}>
-            change theme
-          </AppButton>
-          <AppButton
-            disabled={!!!mobileNetModel}
-            isLoading={!!!mobileNetModel}
-            onPress={() => navigation.navigate('mobilenet')}
-          >
-            picture analyze
-          </AppButton>
-          <AppButton
-            bg='teal.400'
-            disabled={!!!cameraPermission || !!!handPoseModel}
-            isLoading={!!!handPoseModel}
-            onPress={() => navigation.navigate('handpose')}
-          >
-            handpose analyze
-          </AppButton>
-        </VStack>
-      </Center>
-      <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />
-    </>
+    <Center
+      width='100%'
+      height='100%'
+      bg={{
+        linearGradient: {
+          colors: ['orange.300', 'orange.500'],
+          start: [0, 0],
+          end: [1, 1],
+        },
+      }}
+    >
+      <AdMobBanner
+        bannerSize='largeBanner'
+        adUnitID={unitId}
+        servePersonalizedAds={canTracking}
+        onDidFailToReceiveAdWithError={(string: any) => console.log(string)}
+      />
+      <VStack flex={1} alignItems='center' pt={8}>
+        <AppText>{`react-native-appearance: ${colorScheme}`}</AppText>
+        <AppText>{`nativebase colorMode: ${colorMode ? colorMode : 'none'}`}</AppText>
+        <AppButton bg='pink.600' onPress={toggleColorMode}>
+          change theme
+        </AppButton>
+        <AppButton
+          bg='orange.600'
+          disabled={!!!mobileNetModel}
+          isLoading={!!!mobileNetModel}
+          onPress={() => navigation.navigate('mobilenet')}
+        >
+          picture analyze
+        </AppButton>
+        <AppButton
+          bg='red.600'
+          disabled={!!!cameraPermission || !!!handPoseModel}
+          isLoading={!!!handPoseModel}
+          onPress={() => navigation.navigate('handpose')}
+        >
+          handpose analyze
+        </AppButton>
+      </VStack>
+      <VStack flex={1} alignItems='flex-end'>
+        <LottieView source={require('../../assets/tsconfig.json')} autoPlay loop style={{ width: 200, height: 200 }} />
+      </VStack>
+    </Center>
   );
 };

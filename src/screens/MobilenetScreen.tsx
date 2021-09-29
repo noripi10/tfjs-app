@@ -2,33 +2,25 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import React, { useState, useLayoutEffect, useCallback } from 'react';
-import { Box, HStack, VStack, Text, Center, Heading, useColorMode, Spinner, ScrollView, Stack } from 'native-base';
+import { Box, HStack, VStack, Center, Heading, useColorMode, Spinner, ScrollView, Stack, Divider } from 'native-base';
 import { StyleSheet, Image, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 
 import { useTensorFlow } from '../hooks/useTensorFlow';
-import { useColorScheme } from 'react-native-appearance';
+// import { useColorScheme } from 'react-native-appearance';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { StackParamList } from '../navigation/StackNavigator';
-import { AppButton } from '../components/AppButton';
+import { AppButton, AppText } from '../components';
 
 type Props = {
   navigation: StackNavigationProp<StackParamList, 'mobilenet'>;
 };
 
 export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
-  const {
-    cameraPermission,
-    loadedTensorflow,
-    handleCameraStream,
-    prediction,
-    handlePrediction,
-    predictioning,
-    textureDimensions,
-  } = useTensorFlow();
-  const colorScheme = useColorScheme();
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { cameraPermission, loadedTensorflow, prediction, handlePrediction, predictioning } = useTensorFlow();
+  // const colorScheme = useColorScheme();
+  const { colorMode } = useColorMode();
 
   const [imageData, setImageData] = useState<Asset[] | undefined>(undefined);
 
@@ -54,7 +46,7 @@ export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerBackTitle: 'back',
-      headerTitle: 'tensoflow sample',
+      headerTitle: 'tensoflow ☆mobilenet☆',
     });
   }, [navigation]);
 
@@ -62,34 +54,40 @@ export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
     <>
       <Box flex={1}>
         <Stack flex={1}>
-          <VStack flex={1} alignItems='center' display='flex' pt={4}>
+          <VStack flex={1} alignItems='center' display='flex' my={2}>
             <Box px={1}>
               {cameraPermission === null ? (
-                <Text>camera initializing...</Text>
+                <AppText>camera initializing...</AppText>
               ) : cameraPermission === false ? (
-                <Text>camera can't use</Text>
+                <AppText>camera can't use</AppText>
               ) : (
-                <Text>camera initialize complete</Text>
+                <AppText>camera initialize complete</AppText>
               )}
             </Box>
             <Box px={1}>
               {loadedTensorflow === null ? (
-                <Text>tensorflow initializing...</Text>
+                <AppText>tensorflow initializing...</AppText>
               ) : loadedTensorflow === false ? (
-                <Text>tensorflow can't use</Text>
+                <AppText>tensorflow can't use</AppText>
               ) : (
-                <Text>tensorflow initialze complete</Text>
+                <AppText>tensorflow initialze complete</AppText>
               )}
             </Box>
           </VStack>
-          <HStack flex={2} justifyContent='center' alignItems='center'>
-            <AppButton bg='indigo.400' onPress={onSelectImage} disabled={!!!loadedTensorflow || predictioning}>
+          <HStack flex={1} justifyContent='center' alignItems='center' my={2}>
+            <AppButton
+              bg='indigo.500'
+              onPress={onSelectImage}
+              disabled={!!!loadedTensorflow || predictioning}
+              pressedColor='indigo.300'
+            >
               picture select
             </AppButton>
             <AppButton
-              bg='rose.400'
+              bg='rose.500'
               disabled={!!!imageData || !!!cameraPermission || !!!loadedTensorflow || predictioning}
               onPress={onPrediction}
+              pressedColor='rose.300'
             >
               execute
             </AppButton>
@@ -108,22 +106,23 @@ export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
         )}
       </Center>
 
-      <Box flex={2} bgColor='emerald.500' w='100%' p='2'>
+      <Divider />
+      <Box flex={2} w='100%' p='2'>
         <Heading m={1} size='sm'>
-          result
+          <AppText>result</AppText>
         </Heading>
         <ScrollView>
           {prediction &&
             prediction.map(({ className, probability }) => (
               <HStack key={className} px='0' p={1} borderWidth={StyleSheet.hairlineWidth} borderColor='#ddd'>
                 <Box w='65%'>
-                  <Text>{className}</Text>
+                  <AppText>{className}</AppText>
                 </Box>
-                <Text>prediction：</Text>
+                <AppText>prediction：</AppText>
                 <Box w='15%'>
-                  <Text textAlign='right' pr='3'>
-                    {Math.round(probability * 1000) / 10}%
-                  </Text>
+                  <AppText textAlign='right' pr={3}>
+                    {`${Math.round(probability * 1000) / 10}%`}
+                  </AppText>
                 </Box>
               </HStack>
             ))}
@@ -135,7 +134,6 @@ export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
           <Spinner color='blue.500' size='large' />
         </Center>
       )}
-      <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />
     </>
   );
 };

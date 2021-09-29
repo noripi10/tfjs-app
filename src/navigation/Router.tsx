@@ -1,6 +1,9 @@
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { StackNavigator } from './StackNavigator';
+
 import { useColorScheme } from 'react-native-appearance';
 import { useColorMode } from 'native-base';
 
@@ -18,8 +21,11 @@ export const Router = () => {
   const theme = colorMode === 'dark' ? DarkTheme : DefaultTheme;
 
   return (
-    <NavigationContainer theme={theme}>
-      <StackNavigator />
-    </NavigationContainer>
+    <>
+      <NavigationContainer theme={theme}>
+        <StackNavigator />
+      </NavigationContainer>
+      <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />
+    </>
   );
 };

@@ -14,8 +14,16 @@ const Stack = createStackNavigator<StackParamList>();
 
 export const StackNavigator = () => {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name='welcome' component={WelcomScreen} />
+    <Stack.Navigator
+      screenOptions={{
+        headerTitleStyle: { fontFamily: 'PatrickHand-Regular' },
+      }}
+    >
+      <Stack.Screen
+        name='welcome'
+        component={WelcomScreen}
+        options={{ title: 'TensorFlow.js App', headerTitleStyle: { fontFamily: 'PatrickHand-Regular' } }}
+      />
       <Stack.Screen name='mobilenet' component={MobilenetScreen} />
       <Stack.Screen name='handpose' component={HandPoseScreen} />
     </Stack.Navigator>
