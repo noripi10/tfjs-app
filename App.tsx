@@ -6,6 +6,7 @@ import { AppearanceProvider } from 'react-native-appearance';
 
 import { Router } from './src/navigation/Router';
 import { AppProvider } from './src/provider/AppProvider';
+import { NavigationContainer } from '@react-navigation/native';
 
 // Define the config
 const themeConfig = {

@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useLayoutEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
-import { StackNavigator } from './StackNavigator';
+import { DrawerNavigation } from './DrawerNavigation';
 
 import { useColorScheme } from 'react-native-appearance';
 import { useColorMode } from 'native-base';
@@ -23,7 +23,7 @@ export const Router = () => {
   return (
     <>
       <NavigationContainer theme={theme}>
-        <StackNavigator />
+        <DrawerNavigation />
       </NavigationContainer>
       <StatusBar style={colorMode === 'dark' ? 'light' : 'dark'} />
     </>

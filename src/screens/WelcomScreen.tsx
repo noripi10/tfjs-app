@@ -1,15 +1,16 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { VStack, useColorMode, Center, Stack, Box } from 'native-base';
+import { VStack, useColorMode, Center, IconButton, Icon } from 'native-base';
 import { AdMobBanner, getPermissionsAsync, requestPermissionsAsync, PermissionStatus } from 'expo-ads-admob';
+import { Ionicons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import { useColorScheme } from 'react-native-appearance';
-import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTensorFlow } from '../hooks/useTensorFlow';
 import { AppContext } from '../provider/AppProvider';
-import { StackParamList } from '../navigation/StackNavigator';
 import { AppButton, AppText } from '../components';
+import { DrawerParamList } from '../navigation/DrawerNavigation';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 const unitId = Platform.select({
   ios: __DEV__ ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-7379270123809470/8398846802',
@@ -17,7 +18,7 @@ const unitId = Platform.select({
 });
 
 type Props = {
-  navigation: StackNavigationProp<StackParamList, 'welcome'>;
+  navigation: DrawerNavigationProp<DrawerParamList, 'main'>;
 };
 
 export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
@@ -49,6 +50,20 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
   }, []);
 
   useEffect(() => {
+    // Drawer表示用アイコン生成
+    navigation.setOptions({
+      headerLeft: () => (
+        <IconButton
+          icon={<Icon as={Ionicons} name='menu' />}
+          color='red'
+          _pressed={{
+            backgroundColor: '#eed4af',
+          }}
+          onPress={() => navigation.openDrawer()}
+        />
+      ),
+    });
+
     // tracking setting
     trackingSetting();
     // initial tensorflow model
@@ -90,7 +105,7 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           bg='orange.600'
           disabled={!!!mobileNetModel}
           isLoading={!!!mobileNetModel}
-          onPress={() => navigation.navigate('mobilenet')}
+          onPress={() => navigation.navigate('main', { screen: 'mobilenet' })}
         >
           picture analyze
         </AppButton>
@@ -98,7 +113,7 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           bg='red.600'
           disabled={!!!cameraPermission || !!!handPoseModel}
           isLoading={!!!handPoseModel}
-          onPress={() => navigation.navigate('handpose')}
+          onPress={() => navigation.navigate('main', { screen: 'handpose' })}
         >
           handpose analyze
         </AppButton>
