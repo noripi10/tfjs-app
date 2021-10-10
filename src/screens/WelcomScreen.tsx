@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { VStack, useColorMode, Center, IconButton, Icon } from 'native-base';
 import { AdMobBanner, getPermissionsAsync, requestPermissionsAsync, PermissionStatus } from 'expo-ads-admob';
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import { useColorScheme } from 'react-native-appearance';
 
@@ -10,7 +10,7 @@ import { useTensorFlow } from '../hooks/useTensorFlow';
 import { AppContext } from '../provider/AppProvider';
 import { AppButton, AppText } from '../components';
 import { DrawerParamList } from '../navigation/DrawerNavigation';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { DrawerNavigationProp, useDrawerStatus } from '@react-navigation/drawer';
 
 const unitId = Platform.select({
   ios: __DEV__ ? 'ca-app-pub-3940256099942544/2934735716' : 'ca-app-pub-7379270123809470/8398846802',
@@ -22,6 +22,8 @@ type Props = {
 };
 
 export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
+  // drawerNavigation
+  const isDrawerOpen = useDrawerStatus() === 'open';
   // react-native-appearance
   const colorScheme = useColorScheme();
   // native-base
@@ -54,7 +56,8 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
     navigation.setOptions({
       headerLeft: () => (
         <IconButton
-          icon={<Icon as={Ionicons} name='menu' />}
+          // ここに書くとOpenを感知できない。。。
+          icon={<Icon as={AntDesign} name={isDrawerOpen ? 'menufold' : 'menuunfold'} />}
           color='red'
           _pressed={{
             backgroundColor: '#eed4af',
@@ -64,6 +67,7 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
       ),
     });
 
+    console.log('render useEffect start');
     // tracking setting
     trackingSetting();
     // initial tensorflow model
@@ -71,7 +75,8 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
       setMobileNetModel(data.mobileNetModel);
       setHandPoseModel(data.handPoseModel);
     });
-  }, []);
+    console.log('render useEffect end');
+  }, [isDrawerOpen]);
 
   if (canTracking === null) {
     return null;

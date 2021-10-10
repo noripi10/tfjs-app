@@ -15,6 +15,10 @@ type Props = {
   children: React.ReactNode;
 };
 export const AppProvider: React.VFC<Props> = ({ children }: Props) => {
+  // drawer navigation のコントロール
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+
+  // tensorFlowのモデル群
   const [mobileNetModel, setMobileNetModel] = useState<mobilenet.MobileNet | null>(null);
   const [handPoseModel, setHandPoseModel] = useState<handPose.HandPose | null>(null);
   return (
