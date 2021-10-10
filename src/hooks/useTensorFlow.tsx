@@ -5,6 +5,7 @@ import { Camera, PermissionResponse } from 'expo-camera';
 import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import * as hondPose from '@tensorflow-models/handpose';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { fetch, decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { Asset } from 'react-native-image-picker';
 import { AppContext } from '../provider/AppProvider';
@@ -27,7 +28,11 @@ type Result = {
   handlePrediction: (image: any) => Promise<void>;
   predictioning: boolean;
   textureDimensions: { height: number; width: number };
-  initialModel: () => Promise<{ mobileNetModel: mobilenet.MobileNet; handPoseModel: hondPose.HandPose }>;
+  initialModel: () => Promise<{
+    mobileNetModel: mobilenet.MobileNet;
+    handPoseModel: hondPose.HandPose;
+    cocoSsdModel: cocoSsd.ObjectDetection;
+  }>;
 };
 
 export const useTensorFlow = (): Result => {
@@ -35,6 +40,8 @@ export const useTensorFlow = (): Result => {
 
   const [loadedTensorflow, setLoadedTensorflow] = useState<boolean | null>(null);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
+
+  const [predictioning, setPredictioning] = useState(false);
   const [prediction, setPrediction] = useState<
     | {
         className: string;
@@ -42,7 +49,6 @@ export const useTensorFlow = (): Result => {
       }[]
     | null
   >(null);
-  const [predictioning, setPredictioning] = useState(false);
 
   // modelはAppContextへ保存する（めちゃ遅いから起動時一発のみに抑える）
   // const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
@@ -58,7 +64,9 @@ export const useTensorFlow = (): Result => {
     return texture;
   }, []);
 
-  // camera permission
+  /**
+   * camera permission
+   */
   const permissionHandler = async () => {
     try {
       // if (!Constants.isDevice) {
@@ -84,7 +92,9 @@ export const useTensorFlow = (): Result => {
     }
   };
 
-  // permission + tensorFlow初期化
+  /**
+   * permission + tensorFlow初期化
+   */
   const initialSetting = async () => {
     // camera permission
     permissionHandler();
@@ -93,13 +103,24 @@ export const useTensorFlow = (): Result => {
     setLoadedTensorflow(true);
   };
 
-  // 各モデルの初期化＋モデルを返却
+  /**
+   *  各モデルの初期化＋モデルを返却
+   */
   const initialModel = async () => {
-    const mobileNetModel = await mobilenet.load();
-    const handPoseModel = await hondPose.load();
-    return { mobileNetModel, handPoseModel };
+    try {
+      const mobileNetModel = await mobilenet.load();
+      const handPoseModel = await hondPose.load();
+      const cocoSsdModel = await cocoSsd.load();
+      return { mobileNetModel, handPoseModel, cocoSsdModel };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   };
 
+  /**
+   *
+   */
   const handleCameraStream = useCallback(
     (
       images: IterableIterator<tf.Tensor3D>
@@ -112,8 +133,9 @@ export const useTensorFlow = (): Result => {
         const nextImageTensor = images.next().value;
         console.info(nextImageTensor);
         const predictions = await handPoseModel!.estimateHands(nextImageTensor);
-        console.log(predictions);
-        //
+
+        // console.log(predictions);
+
         // do something with tensor here
         //
         // if autoRender is false you need the following two lines.
@@ -129,6 +151,30 @@ export const useTensorFlow = (): Result => {
     []
   );
 
+  /**
+   * tensorFlow3DデータをimageURLから取得
+   */
+  const getTensor3D = useCallback(async (uri: string): Promise<tf.Tensor3D> => {
+    // 画像サイズを取得{width, height}
+    // decodeできるサイズは4096x4096までみたい
+    // const imageAssetsPath = Image.resolveAssetSource(image);
+    // console.info({ imageAssetsPath });
+    // byte arrayへ変換
+    // const response = await fetch(require('../assets/**.jpg'), {}, { isBinary: true });
+    // const response = await fetch(imageAssetsPath.uri, {}, { isBinary: true });
+
+    const response = await fetch(uri, {}, { isBinary: true });
+    const imageBuffer = await response.arrayBuffer();
+    const imageData = new Uint8Array(imageBuffer);
+
+    const imageTensor = decodeJpeg(imageData);
+
+    return imageTensor;
+  }, []);
+
+  /**
+   * assetsから画像情報を推測する
+   */
   const handlePrediction = useCallback(async (assets: Asset[]) => {
     try {
       if (!!!mobileNetModel) {
@@ -139,24 +185,11 @@ export const useTensorFlow = (): Result => {
       }
       setPredictioning(true);
 
-      // 画像サイズを取得{width, height}
-      // decodeできるサイズは4096x4096までみたい
-      // const imageAssetsPath = Image.resolveAssetSource(image);
-      // console.info({ imageAssetsPath });
-      // byte arrayへ変換
-      // const response = await fetch(require('../assets/**.jpg'), {}, { isBinary: true });
-      // const response = await fetch(imageAssetsPath.uri, {}, { isBinary: true });
+      const imageTensor = await getTensor3D(assets[0].uri!);
 
-      const response = await fetch(assets[0].uri!, {}, { isBinary: true });
-      const imageBuffer = await response.arrayBuffer();
-      const imageData = new Uint8Array(imageBuffer);
-
-      const imageTensor = decodeJpeg(imageData);
-      if (mobileNetModel) {
-        const prediction = await mobileNetModel.classify(imageTensor);
-        console.info({ prediction });
-        setPrediction(prediction);
-      }
+      const prediction = await mobileNetModel.classify(imageTensor);
+      console.info({ prediction });
+      setPrediction(prediction);
     } catch (error) {
       if (error instanceof Error) {
         console.error(error.message);
