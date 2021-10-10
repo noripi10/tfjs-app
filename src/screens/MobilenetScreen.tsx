@@ -54,7 +54,7 @@ export const MobilenetScreen: React.VFC<Props> = ({ navigation }: Props) => {
     <>
       <Box flex={1}>
         <Stack flex={1}>
-          <VStack flex={1} alignItems='center' display='flex' my={2}>
+          <VStack flex={1} alignItems='center' my={2}>
             <Box px={1}>
               {cameraPermission === null ? (
                 <AppText>camera initializing...</AppText>
