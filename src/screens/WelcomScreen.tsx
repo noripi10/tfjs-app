@@ -1,8 +1,8 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { Alert, Platform } from 'react-native';
-import { VStack, useColorMode, Center, IconButton, Icon, Stack, Flex } from 'native-base';
+import { AlertDialog, VStack, useColorMode, Center, IconButton, Icon, useDisclose } from 'native-base';
 import { AdMobBanner, getPermissionsAsync, requestPermissionsAsync, PermissionStatus } from 'expo-ads-admob';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import { useColorScheme } from 'react-native-appearance';
 
@@ -28,6 +28,8 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
   const colorScheme = useColorScheme();
   // native-base
   const { colorMode, toggleColorMode } = useColorMode();
+
+  const { isOpen, onToggle } = useDisclose();
 
   const { mobileNetModel, setMobileNetModel, handPoseModel, setHandPoseModel, cocoSsdModel, setCocoSsdModel } =
     useContext(AppContext);
@@ -133,19 +135,20 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           handpose analyze
         </AppButton>
 
-        <AppButton
-          bg='red.600'
-          disabled={!!!cocoSsdModel}
-          isLoading={!!!cocoSsdModel}
-          onPress={() => undefined}
-          width={240}
-        >
+        <AppButton bg='red.600' disabled={!!!cocoSsdModel} isLoading={!!!cocoSsdModel} onPress={onToggle} width={240}>
           cocoSsd analyze
         </AppButton>
       </VStack>
       <VStack flex={1} justifyContent='flex-end' mb={4}>
-        <LottieView source={require('../../assets/tsconfig.json')} autoPlay loop style={{ width: 200, height: 200 }} />
+        <LottieView source={require('../../assets/tensor.json')} autoPlay loop style={{ width: 200, height: 200 }} />
       </VStack>
+      <AlertDialog leastDestructiveRef={null} isOpen={isOpen} onClose={onToggle}>
+        <AlertDialog.Content>
+          <AlertDialog.Header> Oppo !!</AlertDialog.Header>
+          <AlertDialog.CloseButton onPress={onToggle} icon={<FontAwesome name='close' size={16} color='#ddd' />} />
+          <AlertDialog.Body>{'Sorry This menu is preparing (> <)'}</AlertDialog.Body>
+        </AlertDialog.Content>
+      </AlertDialog>
     </Center>
   );
 };

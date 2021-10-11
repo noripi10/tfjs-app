@@ -18,8 +18,8 @@
     "@tensorflow-models/coco-ssd": "^2.2.2",
     "@tensorflow-models/handpose": "^0.0.7",
     "@tensorflow-models/mobilenet": "^2.1.0",
-    "@tensorflow/tfjs": "^3.8.0",
-    "@tensorflow/tfjs-backend-webgl": "^3.8.0",
+    "@tensorflow/tfjs": "3.8.0",
+    "@tensorflow/tfjs-backend-webgl": "3.8.0",
     "@tensorflow/tfjs-react-native": "^0.6.0",
     "expo": "~42.0.1",
     "expo-ads-admob": "~10.1.2",
@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
+    "@bam.tech/react-native-make": "^3.0.3",
     "@types/react": "~16.9.35",
     "@types/react-native": "~0.63.2",
     "@typescript-eslint/eslint-plugin": "^4.29.2",

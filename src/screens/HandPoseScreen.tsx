@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { Box, Text, IconButton } from 'native-base';
+import { Box, Text, IconButton, Center } from 'native-base';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 // import Svg, { Circle } from 'react-native-svg';
 import Constants from 'expo-constants';
@@ -262,7 +262,9 @@ export const HandPoseScreen: React.VFC<Props> = ({ navigation }: Props) => {
           </Box> */}
         </>
       ) : (
-        <Text>camera can't use. only real device</Text>
+        <Center height='50%'>
+          <Text>camera can't use. only real device</Text>
+        </Center>
       )}
     </Box>
   );
