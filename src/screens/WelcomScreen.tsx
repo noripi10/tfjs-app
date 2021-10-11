@@ -69,7 +69,9 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
         />
       ),
     });
+  },[navigation, isDrawerOpen])
 
+  useEffect(() => {
     // tracking setting
     trackingSetting();
     // initial tensorflow model
@@ -84,7 +86,7 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           Alert.alert(error.message);
         }
       });
-  }, [isDrawerOpen]);
+  }, []);
 
   if (canTracking === null) {
     return null;
