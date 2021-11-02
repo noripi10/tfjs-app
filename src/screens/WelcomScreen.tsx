@@ -1,6 +1,6 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
-import { AlertDialog, VStack, useColorMode, Center, IconButton, Icon, useDisclose } from 'native-base';
+import React, { useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { Alert, Platform, TouchableOpacity } from 'react-native';
+import { AlertDialog, VStack, useColorMode, Center, IconButton, Icon, useDisclose, Divider } from 'native-base';
 import { AdMobBanner, getPermissionsAsync, requestPermissionsAsync, PermissionStatus } from 'expo-ads-admob';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
@@ -22,13 +22,13 @@ type Props = {
 };
 
 export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
+  const cancelRef = useRef<TouchableOpacity | null>(null);
   // drawerNavigation
   const isDrawerOpen = useDrawerStatus() === 'open';
   // react-native-appearance
   const colorScheme = useColorScheme();
   // native-base
   const { colorMode, toggleColorMode } = useColorMode();
-
   const { isOpen, onToggle } = useDisclose();
 
   const { mobileNetModel, setMobileNetModel, handPoseModel, setHandPoseModel, cocoSsdModel, setCocoSsdModel } =
@@ -60,16 +60,15 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
       headerLeft: () => (
         <IconButton
           // ここに書くとOpenを感知できない。。。
-          icon={<Icon as={AntDesign} name={isDrawerOpen ? 'menufold' : 'menuunfold'} fontSize={16} />}
-          color='red'
+          icon={<Icon as={AntDesign} size='sm' name={isDrawerOpen ? 'menufold' : 'menuunfold'} />}
           _pressed={{
-            backgroundColor: '#eed4af',
+            backgroundColor: '#383838',
           }}
           onPress={() => navigation.openDrawer()}
         />
       ),
     });
-  },[navigation, isDrawerOpen])
+  }, [navigation, isDrawerOpen]);
 
   useEffect(() => {
     // tracking setting
@@ -113,7 +112,7 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
         <AppText>{`react-native-appearance: ${colorScheme}`}</AppText>
         <AppText>{`nativebase colorMode: ${colorMode ? colorMode : 'none'}`}</AppText>
 
-        <AppButton bg='pink.600' onPress={toggleColorMode} width={240}>
+        <AppButton bg='pink.600' onPress={toggleColorMode} width={240} pressedColor='pink.500'>
           change theme
         </AppButton>
 
@@ -123,6 +122,7 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           isLoading={!!!mobileNetModel}
           onPress={() => navigation.navigate('main', { screen: 'mobilenet' })}
           width={240}
+          pressedColor='red.500'
         >
           picture analyze
         </AppButton>
@@ -133,21 +133,29 @@ export const WelcomScreen: React.VFC<Props> = ({ navigation }: Props) => {
           isLoading={!!!handPoseModel}
           onPress={() => navigation.navigate('main', { screen: 'handpose' })}
           width={240}
+          pressedColor='red.500'
         >
           handpose analyze
         </AppButton>
 
-        <AppButton bg='red.600' disabled={!!!cocoSsdModel} isLoading={!!!cocoSsdModel} onPress={onToggle} width={240}>
+        <AppButton
+          bg='red.600'
+          disabled={!!!cocoSsdModel}
+          isLoading={!!!cocoSsdModel}
+          onPress={onToggle}
+          width={240}
+          pressedColor='red.500'
+        >
           cocoSsd analyze
         </AppButton>
       </VStack>
       <VStack flex={1} justifyContent='flex-end' mb={4}>
         <LottieView source={require('../../assets/tensor.json')} autoPlay loop style={{ width: 200, height: 200 }} />
       </VStack>
-      <AlertDialog leastDestructiveRef={null} isOpen={isOpen} onClose={onToggle}>
+      <AlertDialog leastDestructiveRef={cancelRef} isOpen={isOpen} onClose={onToggle}>
         <AlertDialog.Content>
-          <AlertDialog.Header> Oppo !!</AlertDialog.Header>
           <AlertDialog.CloseButton onPress={onToggle} icon={<FontAwesome name='close' size={16} color='#ddd' />} />
+          <AlertDialog.Header> Oppo !!</AlertDialog.Header>
           <AlertDialog.Body>{'Sorry This menu is preparing (> <)'}</AlertDialog.Body>
         </AlertDialog.Content>
       </AlertDialog>
